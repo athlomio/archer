@@ -1,9 +1,8 @@
 <?php
 declare(strict_types=1);
 
-use Archer\Stream\Contract\Stream;
 use Archer\Stream\GenericStream;
-use Pest\Mutate\Support\StreamWrapper;
+use Archer\Stream\Contract\Stream;
 
 it('throws an exception if the constructor receives a non-resource', function () {
     new GenericStream(true);
