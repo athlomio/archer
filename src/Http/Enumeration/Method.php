@@ -74,7 +74,7 @@ enum Method
     case TRACE;
 
     /**
-     * The safe method return wether or not a method is safe.
+     * The safe method return whether or not a method is safe.
      * 
      * An HTTP method is safe if it doesn't alter the state of the 
      * server. In other words, a method is safe if it leads to a 
@@ -108,7 +108,7 @@ enum Method
     }
 
     /**
-     * The idempotent method return wether or not a method is
+     * The idempotent method return whether or not a method is
      * idempotent.
      * 
      * An HTTP method is idempotent if the intended effect on the 
@@ -150,7 +150,7 @@ enum Method
     }
 
     /**
-     * The cacheable method return wether or not a method is cacheable.
+     * The cacheable method return whether or not a method is cacheable.
      * 
      * A cacheable response is an HTTP response that can be cached, 
      * that is stored to be retrieved and used later, saving a new 

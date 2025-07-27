@@ -14,7 +14,8 @@ use LogicException;
  * The status codes listed below are defined by `RFC 9110`
  * @see https://httpwg.org/specs/rfc9110.html
  */
-enum Status {
+enum Status
+{
     /**
      * This interim response indicates that the client should continue
      * the request or ignore the response if the request is already
@@ -574,7 +575,7 @@ enum Status {
             self::NOT_EXTENDED => 510,
             self::NETWORK_AUTHENTICATION_REQUIRED => 511,
 
-            default => throw new LogicException(message: "Unhandled HTTP status case: {$this->name}")
+            default => throw new LogicException("Unhandled HTTP status case: {$this->name}")
         };
     }
 
@@ -658,12 +659,12 @@ enum Status {
             self::NOT_EXTENDED => "Not extended",
             self::NETWORK_AUTHENTICATION_REQUIRED => "Network authentication required",
 
-            default => throw new LogicException(message: "Unhandled HTTP status case: {$this->name}")
+            default => throw new LogicException("Unhandled HTTP status case: {$this->name}")
         };
     }
 
     /**
-     * The deprecated method returns wether or not the status is
+     * The deprecated method returns whether or not the status is
      * deprecated.
      * 
      * @return bool
