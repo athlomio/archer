@@ -1,0 +1,19 @@
+{
+    "name": "athlomio/archer",
+    "description": "Archer Framework",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Archer\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Ugo Brocard",
+            "email": "ugo.brocard.official@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {}
+}
