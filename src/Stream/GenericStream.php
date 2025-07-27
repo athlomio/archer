@@ -18,22 +18,16 @@ final class GenericStream implements Stream
     protected mixed $stream;
 
     /**
-     * Hash of readable stream types.
-     * @var array
+     * Readable stream types.
+     * @var string
      */
-    protected const array READABLE_MODES = [
-        'r', 'w+', 'r+', 'x+', 'c+', 'rb', 'w+b', 'r+b', 'x+b',
-        'c+b', 'rt', 'w+t', 'r+t', 'x+t', 'c+t', 'a+',
-    ];
+    protected const string READABLE_MODES = "/r|a\+|ab\+|w\+|wb\+|x\+|xb\+|c\+|cb\+/";
 
     /**
-     * Hash of writable stream types.
-     * @var array
+     * Writable stream types.
+     * @var string
      */
-    protected const array WRITABLE_MODES = [
-        'w', 'w+', 'rw', 'r+', 'x+', 'c+', 'wb', 'w+b', 'r+b',
-        'x+b', 'c+b', 'w+t', 'r+t', 'x+t', 'c+t', 'a', 'a+',
-    ];
+    protected const string WRITABLE_MODES = "/a|w|r\+|rb\+|rw|x|c/";
 
     public protected(set) bool $seekable = false;
     public protected(set) bool $readable = false;
@@ -63,7 +57,7 @@ final class GenericStream implements Stream
         }
     }
 
-    public protected(set) string $contents {
+    public string $contents {
         get {
             if (! isset($this->stream)) {
                 throw new RuntimeException("Stream is detached");
@@ -133,8 +127,8 @@ final class GenericStream implements Stream
 
         $this->uri = $this->getMetadata("uri");
         $this->seekable = $metadata["seekable"];
-        $this->readable = in_array($metadata["mode"], self::READABLE_MODES);
-        $this->readable = in_array($metadata["mode"], self::WRITABLE_MODES);
+        $this->readable = (bool) preg_match(self::READABLE_MODES, $metadata["mode"]);
+        $this->writable = (bool) preg_match(self::WRITABLE_MODES, $metadata["mode"]);
     
     }
 

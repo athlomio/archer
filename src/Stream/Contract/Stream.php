@@ -30,7 +30,7 @@ interface Stream
      * Size of the stream
      * @var int|null
      */
-    public int $size { get; }
+    public ?int $size { get; }
 
     /**
      * The stream content
