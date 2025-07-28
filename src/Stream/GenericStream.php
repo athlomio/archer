@@ -10,6 +10,9 @@ use InvalidArgumentException;
 
 use Archer\Stream\Contract\Stream;
 
+/**
+ * PHP Generic stream implementation.
+ */
 final class GenericStream implements Stream
 {
     /** 
