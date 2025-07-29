@@ -45,5 +45,5 @@ interface Response extends Message
      * @param Status $status The status
      * @return static
      */
-    public function status(Status $status): Response;
+    public function status(Status $status): static;
 }

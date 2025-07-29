@@ -52,7 +52,7 @@ final class GenericResponse implements Response
      * @param Status $status The status
      * @return static
      */
-    public function status(Status $status): Response
+    public function status(Status $status): static
     {
         $clone = clone $this;
         $clone->status = $status;
