@@ -204,6 +204,86 @@ final class GenericRequest implements Request
     }
 
     /**
+     * Create a default request from globals.
+     * 
+     * @param array $server $_SERVER super-global.
+     * @return static
+     */
+    public static function fromGlobals(array $server): static
+    {
+        $method = Method::{$server["REQUEST_METHOD"]};
+        $uri = new URI(self::buildUriFromGlobals($server))
+            ->user(
+                $server["PHP_AUTH_USER"] ?? "", 
+                $server["PHP_AUTH_PW"] ?? null
+            );
+
+        $version = explode("/", $server["HTTP_X_PROTOCOL_VERSION"] ?? $server["SERVER_PROTOCOL"] ?? "HTTP/1.1")[1] ?? "1.1";
+        
+        $request = new static($method, $uri)
+            ->version($version);
+
+        foreach (getallheaders() as $name => $values) {
+            $request = $request->headers->with($name, ...explode(",", $values));
+        }
+
+        return $request;
+    }
+
+    /**
+     * Builds the URI from the $_SERVER super global.
+     * 
+     * @param array $server $_SERVER super-global.
+     * @return string
+     */
+    protected static function buildUriFromGlobals(array $server): string
+    {
+        $scheme = self::getSchemeFromGlobals($server);
+        $host = $server["HTTP_HOST"] ?? $server["SERVER_NAME"] ?? "";
+        
+        $port = $server["SERVER_PORT"] ?? null;
+        $port = is_numeric($port) ? (int) $port : null;
+        
+        $uri = $server["REQUEST_URI"] ?? "/";
+        
+        $result = "{$scheme}://{$host}";
+        if ($port !== null) {
+            $result .= ":{$port}";
+        }
+
+        return "{$result}{$uri}";
+    }
+
+    /**
+     * Resolves the scheme from the $_SERVER global.
+     * 
+     * It uses 4 methods to get the scheme:
+     * - HTTPS
+     * - HTTP_X_FORWARDED_PROTO
+     * - REQUEST_SCHEME
+     * - HTTP (default)
+     * 
+     * @param array $server $_SERVER super-global
+     * @return string
+     */
+    protected static function getSchemeFromGlobals(array $server): string
+    {
+        if (array_key_exists("HTTPS", $server) && $_SERVER["HTTPS"] !== "off") {
+            return "https";
+        }
+
+        if (array_key_exists("HTTP_X_FORWARDED_PROTO", $server)) {
+            return strtolower(trim(explode(",", $server["HTTP_X_FORWARDED_PROTO"])[0]));
+        }
+
+        if (array_key_exists("REQUEST_SCHEME", $server)) {
+            return strtolower($server["REQUEST_SCHEME"]);
+        }
+
+        return "http";
+    }
+
+    /**
      * Updates the Host header
      *
      * @see uri()

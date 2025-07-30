@@ -118,6 +118,7 @@ trait MessageBehavior
 
         $clone = clone $this;
         $clone->headers = $headers;
+        $clone->headers->message($clone);
 
         return $clone;
     }

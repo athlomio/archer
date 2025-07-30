@@ -113,7 +113,7 @@ final class HeaderCollection
         $clone = clone $this;
         $clone->headers[$name] = $values;
         
-        if ($clone->headers[$name] === $this->headers[$name]) {
+        if (($clone->headers[$name] ?? []) === ($this->headers[$name] ?? [])) {
             return $this->message;
         }
 
@@ -138,7 +138,7 @@ final class HeaderCollection
         $clone = clone $this;
         unset($clone->headers[$name]);
 
-        if ($this->headers === $clone->headers) {
+        if (($this->headers ?? []) === ($clone->headers ?? [])) {
             return $this->message;
         }
 
@@ -168,7 +168,7 @@ final class HeaderCollection
         $clone = clone $this;
         $clone->headers[$name] = array_merge_recursive($this->headers[$name] ?? [], $values);
 
-        if ($this->headers[$name] === $clone->headers[$name]) {
+        if (($this->headers[$name] ?? []) === ($clone->headers[$name] ?? [])) {
             return $this->message;
         }
 
@@ -188,5 +188,25 @@ final class HeaderCollection
     {
         $name = strtoupper($name);
         return array_key_exists($name, $this->headers);
+    }
+
+    /**
+     * Replace the message with an updated version.
+     * 
+     * This method is implemented in such a way as to retain the
+     * immutability of the message, and return an instance that
+     * has the new HTTP headers.
+     * 
+     * **WARNING**: This method is intended for internal use only.
+     * It exists solely to allow the `HeaderCollection` to communicate 
+     * with the `Message`. External user should use the `Message`
+     * methods instead.
+     * 
+     * @param Message $message
+     * @return void
+     */
+    public function message(Message $message): void
+    {
+        $this->message = $message;
     }
 }

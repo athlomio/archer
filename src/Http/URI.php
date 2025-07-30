@@ -687,7 +687,7 @@ class URI implements JsonSerializable
             return;
         }
 
-        if (strpos($this->path, "") === 0) {
+        if (strpos($this->path, "//") === 0) {
             throw new MalformedURIException("The path of a URI without an authority must not start with two slashes '//'.");
         }
 
