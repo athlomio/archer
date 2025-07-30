@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Archer\Http\Contract;
 
+use InvalidArgumentException;
+
 use Archer\Http\URI;
 use Archer\Http\Enumeration\Method;
 
@@ -77,7 +79,9 @@ interface Request extends Message
      * @link http://tools.ietf.org/html/rfc7230#section-5.3 
      * 
      * @param string $target
-     * @return void
+     * @return static
+     * 
+     * @throws InvalidArgumentException for invalid request target.
      */
     public function target(string $target): static;
 
@@ -89,7 +93,7 @@ interface Request extends Message
      * has the changed request method.
      * 
      * @param Method $method
-     * @return void
+     * @return static
      */
     public function method(Method $method): static;
 
