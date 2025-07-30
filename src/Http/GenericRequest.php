@@ -99,6 +99,10 @@ final class GenericRequest implements Request
             throw new InvalidArgumentException("Invalid request target provided; cannot contain whitespace");
         }
 
+        if ($target === $this->target) {
+            return $this;
+        }
+
         $clone = clone $this;
         $clone->target = $target;
 
@@ -117,6 +121,10 @@ final class GenericRequest implements Request
      */
     public function method(Method $method): static
     {
+        if ($method === $this->method) {
+            return $this;
+        }
+
         $clone = clone $this;
         $clone->method = $method;
 
@@ -157,6 +165,10 @@ final class GenericRequest implements Request
      */
     public function uri(URI $uri, bool $preserve = false): static
     {
+        if ($uri === $this->uri) {
+            return $this;
+        }
+
         $clone = clone $this;
         $clone->uri = $uri;
 

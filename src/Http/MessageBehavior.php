@@ -64,6 +64,10 @@ trait MessageBehavior
      */
     public function body(Stream $stream): static
     {
+        if ($stream === $this->body) {
+            return $this;
+        }
+
         $clone = clone $this;
         $clone->body = $stream;
 
@@ -81,6 +85,10 @@ trait MessageBehavior
      */
     public function version(string $version): static
     {
+        if ($version === $this->version) {
+            return $this;
+        }
+
         $clone = clone $this;
         $clone->version = $version;
 
@@ -104,6 +112,10 @@ trait MessageBehavior
      */
     public function headers(HeaderCollection $headers): static
     {
+        if ($headers === $this->headers) {
+            return $this;
+        }
+
         $clone = clone $this;
         $clone->headers = $headers;
 

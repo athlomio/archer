@@ -112,6 +112,10 @@ final class HeaderCollection
 
         $clone = clone $this;
         $clone->headers[$name] = $values;
+        
+        if ($clone->headers[$name] === $this->headers[$name]) {
+            return $this->message;
+        }
 
         return $this->message->headers($clone);
     }
@@ -133,6 +137,10 @@ final class HeaderCollection
 
         $clone = clone $this;
         unset($clone->headers[$name]);
+
+        if ($this->headers === $clone->headers) {
+            return $this->message;
+        }
 
         return $this->message->headers($clone);
     }
@@ -159,6 +167,10 @@ final class HeaderCollection
 
         $clone = clone $this;
         $clone->headers[$name] = array_merge_recursive($this->headers[$name] ?? [], $values);
+
+        if ($this->headers[$name] === $clone->headers[$name]) {
+            return $this->message;
+        }
 
         return $this->message->headers($clone);
     }

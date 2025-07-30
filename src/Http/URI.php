@@ -308,8 +308,13 @@ class URI implements JsonSerializable
      */
     public function scheme(string $scheme): static
     {
+        $scheme = strtolower($scheme);
+        if ($scheme === $this->scheme) {
+            return $this;
+        }
+
         $clone = clone $this;
-        $clone->scheme = strtolower($scheme);
+        $clone->scheme = $scheme;
         $clone->handleDefaultPort();
         $clone->validate();
 
@@ -337,6 +342,10 @@ class URI implements JsonSerializable
             $user .= ":" . $this->processUserInformation($password);
         }
 
+        if ($user === $this->user) {
+            return $this;
+        }
+
         $clone = clone $this;
         $clone->user = $user;
         $clone->validate();
@@ -357,8 +366,13 @@ class URI implements JsonSerializable
      */
     public function host(string $host): static
     {
+        $host = strtolower($host);
+        if ($host === $this->host) {
+            return $this;
+        }
+
         $clone = clone $this;
-        $clone->host = strtolower($host);
+        $clone->host = $host;
         $clone->validate();
 
         return $clone;
@@ -385,6 +399,9 @@ class URI implements JsonSerializable
     public function port(?int $port): static
     {
         $port = $this->processPort($port);
+        if ($port === $this->port) {
+            return $this;
+        }
 
         $clone = clone $this;
         $clone->port = $port;
@@ -419,6 +436,9 @@ class URI implements JsonSerializable
     public function path(string $path): static
     {
         $path = $this->processPath($path);
+        if ($path === $this->path) {
+            return $this;
+        }
 
         $clone = clone $this;
         $clone->path = $path;
@@ -447,6 +467,9 @@ class URI implements JsonSerializable
     public function query(string $query): static
     {
         $query = $this->processQueryAndFragment($query);
+        if ($query === $this->query) {
+            return $this;
+        }
 
         $clone = clone $this;
         $clone->query = $query;
@@ -471,6 +494,9 @@ class URI implements JsonSerializable
     public function fragment(string $fragment): static
     {
         $fragment = $this->processQueryAndFragment($fragment);
+        if ($fragment === $this->fragment) {
+            return $this;
+        }
 
         $clone = clone $this;
         $clone->fragment = $fragment;

@@ -57,6 +57,10 @@ final class GenericResponse implements Response
      */
     public function status(Status $status): static
     {
+        if ($status === $this->status) {
+            return $this;
+        }
+
         $clone = clone $this;
         $clone->status = $status;
 
