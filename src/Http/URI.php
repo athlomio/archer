@@ -3,8 +3,9 @@ declare(strict_types=1);
 
 namespace Archer\Http;
 
-use InvalidArgumentException;
 use JsonSerializable;
+use InvalidArgumentException;
+use Archer\Http\Exception\MalformedURIException;
 
 /**
  * Value object representing a URI
@@ -140,7 +141,7 @@ class URI implements JsonSerializable
      * @see https://tools.ietf.org/html/rfc3986#section-3.2
      * @var string
      */
-    public protected(set) string $authority {
+    public string $authority {
         get { 
             $result = $this->host;
             if ($this->user !== "") {
@@ -216,10 +217,86 @@ class URI implements JsonSerializable
     public protected(set) string $fragment = "";
 
     /**
+     * Parse the uri as a string and integrates it into the object.
+     * 
+     * The internal function produces broken output for non ASCII 
+     * domain names (IDN) when used with locales other than "C".
+     * 
+     * On the other hand cURL understands IDN correctly only when 
+     * UTF-8 local is configured ("C.UTF-8", "en_US.UTF-8", etc.).
+     * 
+     * @see https://bugs.php.net/bug.php?id=52923
+     * @see https://www.php.net/manual/en/function.parse-url.php#114817
+     * @see https://curl.haxx.se/libcurl/c/CURLOPT_URL.html#ENCODING
+     * 
+     * @param string $uri The uri as a string.
+     * @throws MalformedURIException
+     */
+    public function __construct(string $uri = "")
+    {
+        if ($uri === "") {
+            return;
+        }
+
+        $prefix = "";
+        if (preg_match("%^(.*://\[[0-9:a-fA-F]+\])(.*?)$%", $uri, $matches)) {
+            $prefix = $matches[1];
+            $uri = $matches[2];
+        }
+
+        $encoded = preg_replace_callback(
+            "%[^:/@?&=#]+%usD",
+            fn ($matches) => urlencode($matches[0]),
+            $uri
+        );
+
+        $parts = parse_url($prefix.$encoded);
+        if ($parts === false) {
+            throw new MalformedURIException("Unable to parse URI: {$uri}");
+        }
+
+        $parts = array_map("urldecode", $parts);
+        if (array_key_exists("scheme", $parts)) {
+            $this->scheme = strtolower($parts["scheme"]);
+        }
+
+        if (array_key_exists("user", $parts)) {
+            $this->user = $this->processUserInformation($parts["user"]);
+        }
+
+        if (array_key_exists("pass", $parts)) {
+            $this->user .= ":" . $this->processUserInformation($parts["pass"]);   
+        }
+
+        if (array_key_exists("host", $parts)) {
+            $this->host = strtolower($parts["host"]);
+        }
+
+        if (array_key_exists("port", $parts)) {
+            $this->port = $this->processPort((int) $parts["port"]);
+        }
+
+        if (array_key_exists("path", $parts)) {
+            $this->path = $this->processPath($parts["path"]);
+        }
+
+        if (array_key_exists("query", $parts)) {
+            $this->query = $this->processQueryAndFragment($parts["query"]);
+        }
+
+        if (array_key_exists("fragment", $parts)) {
+            $this->fragment = $this->processQueryAndFragment($parts["fragment"]);
+        }
+
+        $this->handleDefaultPort();
+        $this->validate();
+    }
+
+    /**
      * Return an instance with the specified scheme.
      * 
-     * This method retain the tate of the current instance, and return 
-     * an instance that contains the specified scheme.
+     * This method retains the tate of the current instance, and 
+     * return an instance that contains the specified scheme.
      * 
      * Implementation support the schemes "http" and "https" 
      * case-insensitively and also supports other commonly used schemes.
@@ -242,8 +319,8 @@ class URI implements JsonSerializable
     /**
      * Return an instance with the specified user information.
      * 
-     * This method retain the state of the current instance, and return
-     * an instance that contains the specified user information.
+     * This method retains the state of the current instance, and 
+     * return an instance that contains the specified user information.
      * 
      * Password is optional, but the user information MUST include the 
      * username; an empty string for the username is equivalent to 
@@ -270,8 +347,8 @@ class URI implements JsonSerializable
     /**
      * Return an instance with the specified host.
      * 
-     * This method retain the state of the current instance, and return
-     * an instance that contains the specified host.
+     * This method retains the state of the current instance, and 
+     * return an instance that contains the specified host.
      * 
      * An empty host value is equivalent to removing the host.
      * 
@@ -290,8 +367,8 @@ class URI implements JsonSerializable
     /**
      * Return an instance with the specified port.
      * 
-     * This method retain the state of the current instance, and return
-     * an instance that contains the specified port.
+     * This method retains the state of the current instance, and 
+     * return an instance that contains the specified port.
      * 
      * This implementation will raise an exception for ports outside 
      * the established TCP and UDP port ranges.
@@ -320,8 +397,8 @@ class URI implements JsonSerializable
     /**
      * Return an instance with the specified path.
      * 
-     * This method retain the state of the current instance, and return
-     * an instance that contains the specified path.
+     * This method retains the state of the current instance, and 
+     * return an instance that contains the specified path.
      * 
      * The path can either be empty or absolute (starting with a slash)
      * or rootless (not starting with a slash). This implementation 
@@ -350,10 +427,53 @@ class URI implements JsonSerializable
         return $clone;
     }
 
+    /**
+     * Return an instance with the specified query string.
+     * 
+     * This method retains the state of the current instance, and 
+     * return an instance that contains the specified query string.
+     * 
+     * Users can provide both encoded and decoded query characters.
+     * Implementation ensure the correct encoring as outlined in the
+     * `$query` property.
+     * 
+     * An empty query string value is equivalent to removing the query
+     * string.
+     * 
+     * @param string $query The query string to use with the new 
+     *      instance.
+     * @return static A new instance with the specified query string.
+     */
     public function query(string $query): static
     {
+        $query = $this->processQueryAndFragment($query);
+
         $clone = clone $this;
         $clone->query = $query;
+
+        return $clone;
+    }
+
+    /**
+     * Return an instance with the specified URI fragment.
+     * 
+     * This method retains the state of the current instance, and 
+     * return an instance that contains the specified URI fragment.
+     * 
+     * Users can provide both encoded and decoded fragment characters.
+     * Implementation ensure the correct encoding as outlined in the 
+     * `$fragment` property.
+     * 
+     * An empty fragment value is equivalent to removing the fragment.
+     * @param string $fragment The fragment to use in the new instance.
+     * @return static A new instance with the specified fragment.
+     */
+    public function fragment(string $fragment): static
+    {
+        $fragment = $this->processQueryAndFragment($fragment);
+
+        $clone = clone $this;
+        $clone->fragment = $fragment;
 
         return $clone;
     }
@@ -495,6 +615,12 @@ class URI implements JsonSerializable
         );
     }
 
+    /**
+     * Process a path.
+     * 
+     * @param string $path 
+     * @return string
+     */
     protected function processPath(string $path): string
     {
         return preg_replace_callback(
@@ -505,9 +631,25 @@ class URI implements JsonSerializable
     }
 
     /**
+     * Process a query or fragment.
+     * 
+     * @param string $component Query or Fragment string
+     * @return string
+     */
+    protected function processQueryAndFragment(string $component): string
+    {
+        return preg_replace_callback(
+            "/(?:[^a-zA-Z0-9_\-\.~!\$&\'\(\)\*\+,;=%:@\/\?]++|%(?![A-Fa-f0-9]{2}))/",
+            fn ($matches) => rawurlencode($matches[0]),
+            $component
+        );
+    }
+
+    /**
      * Validate URI components
      * 
      * @return void
+     * @throws MalformedURIException for invalid URI.
      */
     protected function validate(): void
     {
@@ -520,15 +662,17 @@ class URI implements JsonSerializable
         }
 
         if (strpos($this->path, "") === 0) {
-            // Throw new exception;
+            throw new MalformedURIException("The path of a URI without an authority must not start with two slashes '//'.");
         }
 
         if ($this->scheme !== "") {
             return;
         }
 
-        if (strpos(explode("/", $this->path, 2)[0], ":") !== false) {
-            // Throw new exception;
+        if (strpos(explode("/", $this->path, 2)[0], ":") === false) {
+            return;
         }
+
+        throw new MalformedURIException("A relative URI must not have a path beginning with a segment containing a colon.");
     }
 }
