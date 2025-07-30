@@ -66,6 +66,8 @@ final class GenericRequest implements Request
 
     public function __construct(Method $method, URI $uri) 
     {
+        $this->headers = new HeaderCollection($this);
+        
         $this->method = $method;
         $this->uri = $uri;
 

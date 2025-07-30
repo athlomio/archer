@@ -35,7 +35,10 @@ final class GenericResponse implements Response
      */
     public protected(set) Status $status;
 
-    public function __construct(Status $status) {
+    public function __construct(Status $status)
+    {
+        $this->headers = new HeaderCollection($this);
+        
         $this->status = $status;
     }
 
