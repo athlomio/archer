@@ -9,7 +9,7 @@ use Archer\Http\Enumeration\Status;
 /**
  * Implementation of an outgoing, server-side response.
  * 
- * Per the HTTP specification, this interface includes properties for 
+ * Per the HTTP specification, this class includes properties for 
  * each of the following:
  * - Protocol version
  * - Status code and reason

@@ -8,6 +8,25 @@ use InvalidArgumentException;
 use Archer\Http\Contract\Request;
 use Archer\Http\Enumeration\Method;
 
+/**
+ * Representation of an outgoing, client-side request.
+ * 
+ * Per the HTTP specification, this class includes properties for 
+ * each of the following:
+ * - Protocol version
+ * - HTTP method
+ * - URI
+ * - Headers
+ * - Message body
+ * 
+ * During construction, implementations attempts to set the Host 
+ * header from a provided URI if no Host header is provided.
+ * 
+ * Requests are considered immutable; all methods that might change 
+ * state are implemented in such that they retain the internal state 
+ * of the current message and return an instance that contains the 
+ * changed state.
+ */
 final class GenericRequest implements Request
 {
     use MessageBehavior;
